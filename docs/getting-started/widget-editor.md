@@ -136,7 +136,7 @@ hide:
         <tr><td>Titles</td><td><span class="type-chip">Number</span></td><td><code>title_score</code></td><td>Unlocked title count</td></tr>
         <tr><td>Feats of Strength</td><td><span class="type-chip">Number</span></td><td><code>feats_score</code></td><td>Completed Feats of Strength</td></tr>
         <tr><td>Exalted Reputations</td><td><span class="type-chip">Number</span></td><td><code>rep_score</code></td><td>Exalted reputation count</td></tr>
-        <tr><td>Last Logged In</td><td><span class="type-chip type-chip--duration">Duration</span></td><td><code>last_login</code></td><td>Time elapsed since the character last logged in</td></tr>
+        <tr><td>Last Logged In</td><td><span class="type-chip type-chip--text">text</span></td><td><code>last_login</code></td><td>Time elapsed since the character last logged in</td></tr>
         <tr><td>Character Level</td><td><span class="type-chip">Number</span></td><td><code>character_level</code></td><td>Current character level</td></tr>
       </tbody>
     </table>

@@ -126,7 +126,7 @@ hide:
         <tr><td>Item Level</td><td><span class="type-chip">Number</span></td><td><code>gear_score</code></td><td>Current equipped item level</td></tr>
         <tr><td>Mythic+ Rating</td><td><span class="type-chip">Number</span></td><td><code>mythic_score</code></td><td>Current Mythic+ score</td></tr>
         <tr><td>Mythic+ Rating (Exact)</td><td><span class="type-chip type-chip--text">Text</span></td><td><code>mythic_score2</code></td><td>Exact Mythic+ score with thousands separators</td></tr>
-        <tr><td>PvP Rating</td><td><span class="type-chip">Number</span></td><td><code>pvp_score</code></td><td>Current PvP rating</td></tr>
+        <tr><td>PvP Rating</td><td><span class="type-chip type-chip--text">text</span></td><td><code>pvp_score</code></td><td>Current PvP rating</td></tr>
         <tr><td>Raid Progress</td><td><span class="type-chip type-chip--text">Text</span></td><td><code>raid_score</code></td><td>Combined current-season raid progress</td></tr>
         <tr><td>Achievements</td><td><span class="type-chip">Number</span></td><td><code>a_score</code></td><td>Total achievement points</td></tr>
         <tr><td>Achievements (Exact)</td><td><span class="type-chip type-chip--text">Text</span></td><td><code>a_score2</code></td><td>Exact achievement points with thousands separators</td></tr>

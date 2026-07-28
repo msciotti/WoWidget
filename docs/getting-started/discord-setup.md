@@ -52,6 +52,11 @@ hide:
 </figure>
 </div>
 
+!!! tip "Customize your Discord application icon"
+    WoWidget includes a built-in **Icon Generator** that lets you create a custom Discord application icon matching your preferred color theme.
+
+    Open **Icon Generator** from the WoWidget home screen, choose a color, then save the generated PNG and upload it to your Discord application's **General Information → App Icon** field.
+
 <div class="guide-step guide-step--split" markdown="1">
 <div class="guide-step__copy">
 <div class="guide-step__heading"><span class="step-number">3</span><h2>Configure OAuth2</h2></div>

@@ -129,7 +129,7 @@ hide:
         <span class="ww-home__link-arrow" aria-hidden="true">→</span>
       </a>
 
-      <a class="ww-home__link-card" href="reference/faq/">
+      <a class="ww-home__link-card" href="support/faq/">
         <span class="ww-home__link-icon">02</span>
         <span class="ww-home__link-text">
           <strong>Frequently Asked Questions</strong>

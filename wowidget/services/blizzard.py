@@ -1,8 +1,24 @@
 import time
 from typing import Any
-from urllib.parse import urlparse
 
 import requests
+
+
+PVP_CLASS_SPECIALIZATIONS: dict[str, tuple[str, ...]] = {
+    "Death Knight": ("Blood", "Frost", "Unholy"),
+    "Demon Hunter": ("Havoc", "Vengeance", "Devourer"),
+    "Druid": ("Balance", "Feral", "Guardian", "Restoration"),
+    "Evoker": ("Augmentation", "Devastation", "Preservation"),
+    "Hunter": ("Beast Mastery", "Marksmanship", "Survival"),
+    "Mage": ("Arcane", "Fire", "Frost"),
+    "Monk": ("Brewmaster", "Mistweaver", "Windwalker"),
+    "Paladin": ("Holy", "Protection", "Retribution"),
+    "Priest": ("Discipline", "Holy", "Shadow"),
+    "Rogue": ("Assassination", "Outlaw", "Subtlety"),
+    "Shaman": ("Elemental", "Enhancement", "Restoration"),
+    "Warlock": ("Affliction", "Demonology", "Destruction"),
+    "Warrior": ("Arms", "Fury", "Protection"),
+}
 
 
 class BlizzardService:
@@ -193,12 +209,61 @@ class BlizzardService:
             return {}
 
     @staticmethod
-    def _path_from_blizzard_url(
-        url: str,
-    ) -> str:
-        parsed_url = urlparse(url)
-        return parsed_url.path
+    def _normalize_pvp_slug(value: str) -> str:
+        return "".join(
+            character
+            for character in value.lower()
+            if character.isalnum()
+        )
 
+    def _get_pvp_brackets(
+        self,
+        *,
+        base_path: str,
+        profile: dict[str, Any],
+        namespace: str,
+        region: str,
+        locale: str,
+        access_token: str,
+    ) -> list[dict[str, Any]]:
+        bracket_slugs = [
+            "2v2",
+            "3v3",
+            "rbg",
+        ]
+
+        character_class = profile.get("character_class") or {}
+        class_name = str(character_class.get("name") or "")
+        class_slug = self._normalize_pvp_slug(class_name)
+
+        for specialization in PVP_CLASS_SPECIALIZATIONS.get(
+            class_name,
+            (),
+        ):
+            spec_slug = self._normalize_pvp_slug(specialization)
+
+            bracket_slugs.extend(
+                (
+                    f"shuffle-{class_slug}-{spec_slug}",
+                    f"blitz-{class_slug}-{spec_slug}",
+                )
+            )
+
+        pvp_brackets: list[dict[str, Any]] = []
+
+        for bracket_slug in bracket_slugs:
+            bracket_data = self._get_optional_json(
+                path=f"{base_path}/pvp-bracket/{bracket_slug}",
+                namespace=namespace,
+                region=region,
+                locale=locale,
+                access_token=access_token,
+            )
+
+            if bracket_data:
+                pvp_brackets.append(bracket_data)
+
+        return pvp_brackets
 
 
     def get_character_profile(
@@ -281,7 +346,6 @@ class BlizzardService:
         namespace = f"profile-{region}"
 
         base_path = f"/profile/wow/character/" f"{realm_slug}/{character_name}"
-
         profile = self._get_json(
             path=base_path,
             namespace=namespace,
@@ -381,37 +445,14 @@ class BlizzardService:
             access_token=access_token,
         )
 
-        pvp_brackets: list[dict[str, Any]] = []
-
-        if isinstance(pvp_summary, dict):
-            raw_brackets = pvp_summary.get("brackets")
-
-            if isinstance(raw_brackets, list):
-                for bracket in raw_brackets:
-                    if not isinstance(bracket, dict):
-                        continue
-
-                    bracket_url = bracket.get("href")
-
-                    if not bracket_url:
-                        continue
-
-                    bracket_path = self._path_from_blizzard_url(bracket_url)
-
-                    bracket_data = self._get_json(
-                        path=bracket_path,
-                        namespace=namespace,
-                        region=region,
-                        locale=locale,
-                        access_token=access_token,
-                        allow_not_found=True,
-                    )
-
-                    if isinstance(
-                        bracket_data,
-                        dict,
-                    ):
-                        pvp_brackets.append(bracket_data)
+        pvp_brackets = self._get_pvp_brackets(
+            base_path=base_path,
+            profile=profile,
+            namespace=namespace,
+            region=region,
+            locale=locale,
+            access_token=access_token,
+        )
 
         return {
             "profile": profile,

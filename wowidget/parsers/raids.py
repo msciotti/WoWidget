@@ -11,9 +11,9 @@ def safe_list(value: Any) -> list:
     return value if isinstance(value, list) else []
 
 
-def parse_raid_progression(
+def parse_raid_progressions(
     raid_encounters: dict,
-) -> str:
+) -> dict[str, str]:
     raid_encounters = safe_dict(raid_encounters)
 
     expansions = safe_list(raid_encounters.get("expansions"))
@@ -75,12 +75,14 @@ def parse_raid_progression(
 
     total_bosses = sum(current_tier_raids.values())
 
-    for difficulty_type in [
-        "MYTHIC",
-        "HEROIC",
-        "NORMAL",
-        "LFR",
-    ]:
+    formatted_progression = {
+        "MYTHIC": "---",
+        "HEROIC": "---",
+        "NORMAL": "---",
+        "LFR": "---",
+    }
+
+    for difficulty_type in formatted_progression:
         completed_total = 0
 
         for raid_name, raid_total in current_tier_raids.items():
@@ -91,9 +93,37 @@ def parse_raid_progression(
                 raid_total,
             )
 
-        if completed_total > 0:
-            suffix = difficulty_suffixes[difficulty_type]
+        if completed_total <= 0:
+            continue
 
-            return f"{completed_total}/" f"{total_bosses} {suffix}"
+        suffix = difficulty_suffixes[difficulty_type]
 
-    return "---"
+        formatted_progression[difficulty_type] = (
+            f"{completed_total}/{total_bosses} {suffix}"
+        )
+
+    highest_progression = "---"
+
+    for difficulty_type in [
+        "MYTHIC",
+        "HEROIC",
+        "NORMAL",
+        "LFR",
+    ]:
+        value = formatted_progression[difficulty_type]
+
+        if value != "---":
+            highest_progression = value
+            break
+
+    return {
+        "highest": highest_progression,
+        "heroic": formatted_progression["HEROIC"],
+        "normal": formatted_progression["NORMAL"],
+    }
+
+
+def parse_raid_progression(
+    raid_encounters: dict,
+) -> str:
+    return parse_raid_progressions(raid_encounters)["highest"]

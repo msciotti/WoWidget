@@ -63,12 +63,11 @@ nav:
       - Portrait Studio: using-wowidget/portrait-studio.md
       - Updating Your Widget: using-wowidget/updating-widget.md
 
-  - Reference:
-      - Widget Variables: reference/widget-variables.md
-      - FAQ: reference/faq.md
+  - Widget Variables: reference/widget-variables.md
 
   - Support:
       - Troubleshooting: support/troubleshooting.md
+      - FAQ: support/faq.md
 
   - About: about.md
 

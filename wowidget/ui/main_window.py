@@ -24,6 +24,7 @@ from wowidget.storage.models import (
     DEFAULT_PORTRAIT_X_OFFSET,
     DEFAULT_PORTRAIT_Y_OFFSET,
 )
+from wowidget.ui.app_icon_generator_dialog import AppIconGeneratorDialog
 from wowidget.ui.character_page import CharacterPage
 from wowidget.ui.settings_page import SettingsPage
 from wowidget.ui.setup_page import SetupPage
@@ -87,8 +88,8 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle(f"WoWidget {APP_VERSION}")
         self.resize(
-            1120,
-            800,
+            1400,
+            1000,
         )
         self.setMinimumSize(
             900,
@@ -158,14 +159,14 @@ class MainWindow(QMainWindow):
         available = screen.availableGeometry()
 
         target_width = min(
-            1120,
+            1400,
             max(
                 self.minimumWidth(),
                 available.width() - 80,
             ),
         )
         target_height = min(
-            800,
+            1000,
             max(
                 self.minimumHeight(),
                 available.height() - 80,
@@ -227,14 +228,11 @@ class MainWindow(QMainWindow):
         header_layout.addWidget(self.title_label)
         header_layout.addWidget(self.subtitle_label)
 
-        content_layout = QHBoxLayout()
-        content_layout.setSpacing(14)
-
         information_frame = QFrame()
         information_frame.setObjectName("GlassCard")
         information_frame.setSizePolicy(
             QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Fixed,
         )
 
         information_layout = QVBoxLayout(information_frame)
@@ -270,7 +268,6 @@ class MainWindow(QMainWindow):
         self.authorization_warning_label.hide()
 
         information_layout.addWidget(self.authorization_warning_label)
-
         information_layout.addWidget(SectionDivider("Connection Status"))
 
         connection_grid = QGridLayout()
@@ -282,29 +279,12 @@ class MainWindow(QMainWindow):
         self.cloudflare_indicator = StatusIndicator("Cloudflare")
         self.updater_indicator = StatusIndicator("Updater")
 
-        connection_grid.addWidget(
-            self.blizzard_indicator,
-            0,
-            0,
-        )
-        connection_grid.addWidget(
-            self.discord_indicator,
-            0,
-            1,
-        )
-        connection_grid.addWidget(
-            self.cloudflare_indicator,
-            1,
-            0,
-        )
-        connection_grid.addWidget(
-            self.updater_indicator,
-            1,
-            1,
-        )
+        connection_grid.addWidget(self.blizzard_indicator, 0, 0)
+        connection_grid.addWidget(self.discord_indicator, 0, 1)
+        connection_grid.addWidget(self.cloudflare_indicator, 1, 0)
+        connection_grid.addWidget(self.updater_indicator, 1, 1)
 
         information_layout.addLayout(connection_grid)
-
         information_layout.addWidget(SectionDivider("Update Information"))
 
         self.last_check_row = InfoRow("Last Check")
@@ -314,69 +294,19 @@ class MainWindow(QMainWindow):
         information_layout.addWidget(self.last_check_row)
         information_layout.addWidget(self.last_push_row)
         information_layout.addWidget(self.interval_row)
+        information_layout.addWidget(SectionDivider("Portrait Editor"))
 
-        self.character_summary = CharacterSummaryWidget()
+        portrait_editor_card = QFrame()
+        portrait_editor_card.setObjectName("PortraitEditorCard")
 
-        self.character_summary_scroll = QScrollArea()
-        self.character_summary_scroll.setObjectName("CharacterSummaryScroll")
-        self.character_summary_scroll.setWidgetResizable(True)
-        self.character_summary_scroll.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        portrait_editor_layout = QHBoxLayout(portrait_editor_card)
+        portrait_editor_layout.setContentsMargins(
+            16,
+            16,
+            16,
+            16,
         )
-        self.character_summary_scroll.setVerticalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAsNeeded
-        )
-        self.character_summary_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        self.character_summary_scroll.setMinimumHeight(190)
-        self.character_summary_scroll.setWidget(self.character_summary)
-
-        information_layout.addWidget(
-            self.character_summary_scroll,
-            stretch=1,
-        )
-
-        self.operation_status_label = QLabel("")
-        self.operation_status_label.setWordWrap(True)
-
-        information_layout.addWidget(self.operation_status_label)
-
-        portrait_frame = QFrame()
-        portrait_frame.setObjectName("GlassCard")
-        portrait_frame.setFixedWidth(370)
-        portrait_frame.setMinimumHeight(380)
-
-        portrait_outer_layout = QVBoxLayout(portrait_frame)
-        portrait_outer_layout.setContentsMargins(
-            6,
-            10,
-            6,
-            10,
-        )
-
-        portrait_scroll = QScrollArea()
-        portrait_scroll.setObjectName("PortraitScroll")
-        portrait_scroll.setWidgetResizable(True)
-        portrait_scroll.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
-        )
-        portrait_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        portrait_scroll.setFrameShape(QFrame.Shape.NoFrame)
-
-        portrait_content = QWidget()
-        portrait_content.setMinimumWidth(342)
-
-        portrait_layout = QVBoxLayout(portrait_content)
-        portrait_layout.setContentsMargins(
-            12,
-            6,
-            12,
-            8,
-        )
-        portrait_layout.setSpacing(9)
-
-        portrait_title = QLabel("Portrait Editor")
-        portrait_title.setObjectName("SectionTitle")
-        portrait_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        portrait_editor_layout.setSpacing(28)
 
         self.portrait_preview_label = QLabel("Generate a portrait to begin")
         self.portrait_preview_label.setFixedSize(
@@ -386,15 +316,24 @@ class MainWindow(QMainWindow):
         self.portrait_preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.portrait_preview_label.setObjectName("InnerCard")
 
-        portrait_layout.addWidget(portrait_title)
-        portrait_layout.addWidget(
+        portrait_editor_layout.addWidget(
             self.portrait_preview_label,
-            alignment=Qt.AlignmentFlag.AlignHCenter,
+            alignment=Qt.AlignmentFlag.AlignTop,
         )
-        portrait_layout.addSpacing(12)
+
+        portrait_controls = QWidget()
+        portrait_controls.setMinimumWidth(360)
+        portrait_controls_layout = QVBoxLayout(portrait_controls)
+        portrait_controls_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+        portrait_controls_layout.setSpacing(10)
 
         self.scale_slider, self.scale_spinbox = self._add_portrait_control(
-            portrait_layout,
+            portrait_controls_layout,
             label="Scale",
             minimum=-80,
             maximum=80,
@@ -403,7 +342,7 @@ class MainWindow(QMainWindow):
         )
 
         self.x_slider, self.x_spinbox = self._add_portrait_control(
-            portrait_layout,
+            portrait_controls_layout,
             label="Horizontal",
             minimum=-500,
             maximum=500,
@@ -412,13 +351,15 @@ class MainWindow(QMainWindow):
         )
 
         self.y_slider, self.y_spinbox = self._add_portrait_control(
-            portrait_layout,
+            portrait_controls_layout,
             label="Vertical",
             minimum=-500,
             maximum=500,
             value=PORTRAIT_UI_DEFAULT_Y,
             field_width=76,
         )
+
+        portrait_controls_layout.addStretch()
 
         portrait_button_layout = QHBoxLayout()
         portrait_button_layout.setSpacing(8)
@@ -433,21 +374,45 @@ class MainWindow(QMainWindow):
         portrait_button_layout.addWidget(self.generate_portrait_button)
         portrait_button_layout.addWidget(self.save_portrait_button)
 
+        secondary_button_layout = QHBoxLayout()
+        secondary_button_layout.setSpacing(8)
+
         self.reset_portrait_button = QPushButton("Reset Composition")
         self.reset_portrait_button.clicked.connect(self.portrait_reset_requested.emit)
 
-        portrait_layout.addLayout(portrait_button_layout)
-        portrait_layout.addWidget(self.reset_portrait_button)
-        portrait_layout.addStretch()
+        self.portrait_folder_button = QPushButton("Portrait Folder")
+        self.portrait_folder_button.clicked.connect(
+            self.open_generated_requested.emit
+        )
 
-        portrait_scroll.setWidget(portrait_content)
-        portrait_outer_layout.addWidget(portrait_scroll)
+        secondary_button_layout.addWidget(self.reset_portrait_button)
+        secondary_button_layout.addWidget(self.portrait_folder_button)
 
-        content_layout.addWidget(
-            information_frame,
+        portrait_controls_layout.addLayout(portrait_button_layout)
+        portrait_controls_layout.addLayout(secondary_button_layout)
+
+        portrait_editor_layout.addWidget(
+            portrait_controls,
             stretch=1,
         )
-        content_layout.addWidget(portrait_frame)
+
+        information_layout.addWidget(portrait_editor_card)
+
+        self.operation_status_label = QLabel("")
+        self.operation_status_label.setWordWrap(True)
+        information_layout.addWidget(self.operation_status_label)
+
+        content_scroll = QScrollArea()
+        content_scroll.setObjectName("StatusContentScroll")
+        content_scroll.setWidgetResizable(True)
+        content_scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        content_scroll.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+        content_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        content_scroll.setWidget(information_frame)
 
         action_card = QFrame()
         action_card.setObjectName("GlassCard")
@@ -473,26 +438,32 @@ class MainWindow(QMainWindow):
             self.change_character_requested.emit
         )
 
+        self.icon_generator_button = QPushButton("Icon Generator")
+        self.icon_generator_button.clicked.connect(self._open_app_icon_generator)
+
         self.settings_button = QPushButton("Settings")
         self.settings_button.clicked.connect(self.settings_open_requested.emit)
-
-        self.minimize_button = QPushButton("Minimize to Tray")
-        self.minimize_button.clicked.connect(self.minimize_requested.emit)
 
         action_layout.addWidget(self.update_widget_button)
         action_layout.addWidget(self.toggle_updates_button)
         action_layout.addWidget(self.change_character_button)
+        action_layout.addWidget(self.icon_generator_button)
         action_layout.addWidget(self.settings_button)
-        action_layout.addWidget(self.minimize_button)
 
         main_layout.addWidget(header_card)
-        main_layout.addLayout(
-            content_layout,
+        main_layout.addWidget(
+            content_scroll,
             stretch=1,
         )
         main_layout.addWidget(action_card)
 
         return page
+
+    def _open_app_icon_generator(
+        self,
+    ) -> None:
+        dialog = AppIconGeneratorDialog(self)
+        dialog.exec()
 
     def _add_portrait_control(
         self,
@@ -505,17 +476,16 @@ class MainWindow(QMainWindow):
         field_width: int,
     ) -> tuple[QSlider, QSpinBox]:
         title = QLabel(label)
-        title.setObjectName("MutedLabel")
+        title.setObjectName("PortraitControlLabel")
 
         row = QHBoxLayout()
-        row.setSpacing(10)
-
-        slider = QSlider(Qt.Orientation.Horizontal)
-        slider.setRange(
-            minimum,
-            maximum,
+        row.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
         )
-        slider.setValue(value)
+        row.setSpacing(12)
 
         spinbox = QSpinBox()
         spinbox.setRange(
@@ -527,6 +497,18 @@ class MainWindow(QMainWindow):
         spinbox.setKeyboardTracking(False)
         spinbox.setAlignment(Qt.AlignmentFlag.AlignCenter)
         spinbox.setFixedWidth(field_width)
+
+        slider = QSlider(Qt.Orientation.Horizontal)
+        slider.setRange(
+            minimum,
+            maximum,
+        )
+        slider.setValue(value)
+        slider.setMinimumWidth(260)
+        slider.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Fixed,
+        )
 
         slider.valueChanged.connect(
             lambda new_value, target=spinbox: (
@@ -549,11 +531,8 @@ class MainWindow(QMainWindow):
         slider.valueChanged.connect(self._emit_portrait_composition_changed)
         spinbox.valueChanged.connect(self._emit_portrait_composition_changed)
 
-        row.addWidget(
-            slider,
-            stretch=1,
-        )
         row.addWidget(spinbox)
+        row.addWidget(slider, stretch=1)
 
         layout.addWidget(title)
         layout.addLayout(row)
@@ -812,7 +791,7 @@ class MainWindow(QMainWindow):
         self,
         widget_data: dict | None,
     ) -> None:
-        self.character_summary.set_data(widget_data)
+        return
 
     def show_portrait(
         self,

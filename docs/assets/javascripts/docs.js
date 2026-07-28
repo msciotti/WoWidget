@@ -28,6 +28,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.querySelectorAll(".copy-button").forEach((button) => {
+    if (button.dataset.wwCopyInitialized === "true") return;
+    button.dataset.wwCopyInitialized = "true";
     button.addEventListener("click", async () => {
       const value = button.dataset.copy || "";
       try {
@@ -346,3 +348,76 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof document$ !== "undefined") document$.subscribe(initialize);
 })();
 
+
+
+(() => {
+  const release = {
+    version: "1.1.0",
+    label: "✨ WoWidget 1.1.0 is now available — View what's new and download →",
+    url: "https://github.com/solxvt/WoWidget/releases/tag/v1.1.0"
+  };
+  const storageKey = `wowidget-release-banner-${release.version}`;
+  const revealDelay = 750;
+  const removalDelay = 420;
+
+  const getDismissed = () => {
+    try { return localStorage.getItem(storageKey) === "dismissed"; }
+    catch (_) { return false; }
+  };
+
+  const rememberDismissal = () => {
+    try { localStorage.setItem(storageKey, "dismissed"); }
+    catch (_) {}
+  };
+
+  const initializeReleaseBanner = () => {
+    if (getDismissed()) return;
+    if (document.querySelector(".ww-release-banner")) return;
+
+    const anchor = document.querySelector(".md-tabs") || document.querySelector(".md-header");
+    if (!anchor) return;
+
+    const banner = document.createElement("aside");
+    banner.className = "ww-release-banner";
+    banner.setAttribute("aria-label", `WoWidget ${release.version} release announcement`);
+    banner.innerHTML = `
+      <div class="ww-release-banner__inner">
+        <a class="ww-release-banner__link" href="${release.url}">${release.label}</a>
+      </div>
+    `;
+    anchor.insertAdjacentElement("afterend", banner);
+
+    let revealTimer = 0;
+
+    const dismiss = () => {
+      if (banner.classList.contains("is-dismissed")) return;
+      window.clearTimeout(revealTimer);
+      banner.classList.remove("is-visible");
+      banner.classList.add("is-dismissed");
+      rememberDismissal();
+      window.removeEventListener("scroll", handleScroll);
+      window.setTimeout(() => banner.remove(), removalDelay);
+    };
+
+    const handleScroll = () => {
+      if (window.scrollY >= 72) dismiss();
+    };
+
+    banner.querySelector("a")?.addEventListener("click", rememberDismissal);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    revealTimer = window.setTimeout(() => {
+      if (window.scrollY >= 72) {
+        dismiss();
+        return;
+      }
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => banner.classList.add("is-visible"));
+      });
+    }, revealDelay);
+  };
+
+  document.addEventListener("DOMContentLoaded", initializeReleaseBanner);
+  if (typeof document$ !== "undefined") document$.subscribe(initializeReleaseBanner);
+})();

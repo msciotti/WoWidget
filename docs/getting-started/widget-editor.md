@@ -119,28 +119,16 @@ hide:
   </section>
 
   <div class="section-heading"><div><p class="section-heading__eyebrow">Stats 2–6</p><h3>Choose five optional variables</h3></div><p>Match both the Presentation Type and Data Field exactly.</p></div>
-  <div class="table-shell">
-    <table class="variable-table">
-      <thead><tr><th>Display name</th><th>Presentation type</th><th>Data field</th><th>What it displays</th></tr></thead>
-      <tbody>
-        <tr><td>Item Level</td><td><span class="type-chip">Number</span></td><td><code>gear_score</code></td><td>Current equipped item level</td></tr>
-        <tr><td>Mythic+ Rating</td><td><span class="type-chip">Number</span></td><td><code>mythic_score</code></td><td>Current Mythic+ score</td></tr>
-        <tr><td>Mythic+ Rating (Exact)</td><td><span class="type-chip type-chip--text">Text</span></td><td><code>mythic_score2</code></td><td>Exact Mythic+ score with thousands separators</td></tr>
-        <tr><td>PvP Rating</td><td><span class="type-chip type-chip--text">text</span></td><td><code>pvp_score</code></td><td>Current PvP rating</td></tr>
-        <tr><td>Raid Progress</td><td><span class="type-chip type-chip--text">Text</span></td><td><code>raid_score</code></td><td>Combined current-season raid progress</td></tr>
-        <tr><td>Achievements</td><td><span class="type-chip">Number</span></td><td><code>a_score</code></td><td>Total achievement points</td></tr>
-        <tr><td>Achievements (Exact)</td><td><span class="type-chip type-chip--text">Text</span></td><td><code>a_score2</code></td><td>Exact achievement points with thousands separators</td></tr>
-        <tr><td>Achievements Icon</td><td><span class="type-chip">Image</span></td><td><code>a_icon</code></td><td>Achievement icon for use with either Achievements field</td></tr>
-        <tr><td>Mounts</td><td><span class="type-chip">Number</span></td><td><code>mount_score</code></td><td>Collected mount count</td></tr>
-        <tr><td>Pets</td><td><span class="type-chip">Number</span></td><td><code>pet_score</code></td><td>Collected companion pet count</td></tr>
-        <tr><td>Titles</td><td><span class="type-chip">Number</span></td><td><code>title_score</code></td><td>Unlocked title count</td></tr>
-        <tr><td>Feats of Strength</td><td><span class="type-chip">Number</span></td><td><code>feats_score</code></td><td>Completed Feats of Strength</td></tr>
-        <tr><td>Exalted Reputations</td><td><span class="type-chip">Number</span></td><td><code>rep_score</code></td><td>Exalted reputation count</td></tr>
-        <tr><td>Last Logged In</td><td><span class="type-chip type-chip--text">text</span></td><td><code>last_login</code></td><td>Time elapsed since the character last logged in</td></tr>
-        <tr><td>Character Level</td><td><span class="type-chip">Number</span></td><td><code>character_level</code></td><td>Current character level</td></tr>
-      </tbody>
-    </table>
+
+  <div class="variable-guide-link">
+    <div>
+      <span class="variable-guide-link__eyebrow">Complete reference</span>
+      <h3>Browse all Widget Variables</h3>
+      <p>Open the categorized variable reference in a new tab, copy the five Data Fields you want to use, then return here to finish the Stats Grid.</p>
+    </div>
+    <a class="md-button md-button--primary" href="../../reference/widget-variables/" target="_blank" rel="noopener">Browse Widget Variables</a>
   </div>
+
   <aside class="ww-callout ww-callout--tip"><strong>These slots remain editable</strong><span>You can return to the Widget Editor later and change which five optional statistics appear.</span></aside>
 </section>
 

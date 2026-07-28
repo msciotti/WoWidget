@@ -15,8 +15,22 @@ QWidget {
 
 QMainWindow,
 QStackedWidget,
-QWidget#PlainPage {
-    background-color: #11101A;
+QWidget#PlainPage,
+QDialog#IconGeneratorDialog,
+QColorDialog#WoWidgetColorDialog {
+    background-color: #171126;
+}
+
+QColorDialog#WoWidgetColorDialog QLabel {
+    color: #F5F2FF;
+}
+
+QColorDialog#WoWidgetColorDialog QLineEdit,
+QColorDialog#WoWidgetColorDialog QSpinBox {
+    color: #FFFFFF;
+    background-color: rgba(10, 9, 19, 235);
+    border: 1px solid rgba(191, 164, 232, 90);
+    border-radius: 7px;
 }
 
 QLabel#PageTitle {
@@ -69,6 +83,18 @@ QFrame#InnerCard {
     border-radius: 12px;
 }
 
+QFrame#PortraitEditorCard {
+    background-color: rgba(10, 9, 20, 178);
+    border: 1px solid rgba(199, 164, 247, 58);
+    border-radius: 12px;
+}
+
+QLabel#PortraitControlLabel {
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 650;
+}
+
 QFrame#DividerLine {
     color: rgba(196, 164, 240, 72);
     background-color: rgba(196, 164, 240, 72);
@@ -92,6 +118,15 @@ QScrollArea#PortraitScroll {
 }
 
 QScrollArea#PortraitScroll > QWidget > QWidget {
+    background: transparent;
+}
+
+QScrollArea#StatusContentScroll {
+    background: transparent;
+    border: none;
+}
+
+QScrollArea#StatusContentScroll > QWidget > QWidget {
     background: transparent;
 }
 

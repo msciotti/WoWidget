@@ -154,6 +154,56 @@ def build_discord_payload(
             ),
         },
         {
+            "type": 1,
+            "name": "solo_score",
+            "value": str(
+                widget_data.get(
+                    "solo_rating",
+                    "---",
+                )
+            ),
+        },
+        {
+            "type": 1,
+            "name": "two_score",
+            "value": str(
+                widget_data.get(
+                    "two_rating",
+                    "---",
+                )
+            ),
+        },
+        {
+            "type": 1,
+            "name": "three_score",
+            "value": str(
+                widget_data.get(
+                    "three_rating",
+                    "---",
+                )
+            ),
+        },
+        {
+            "type": 1,
+            "name": "blitz_score",
+            "value": str(
+                widget_data.get(
+                    "blitz_rating",
+                    "---",
+                )
+            ),
+        },
+        {
+            "type": 1,
+            "name": "rbg_score",
+            "value": str(
+                widget_data.get(
+                    "rbg_rating",
+                    "---",
+                )
+            ),
+        },
+        {
             "type": 2,
             "name": "gear_score",
             "value": safe_int(
@@ -169,6 +219,26 @@ def build_discord_payload(
             "value": str(
                 widget_data.get(
                     "raid_progression",
+                    "---",
+                )
+            ),
+        },
+        {
+            "type": 1,
+            "name": "heroic_score",
+            "value": str(
+                widget_data.get(
+                    "heroic_progression",
+                    "---",
+                )
+            ),
+        },
+        {
+            "type": 1,
+            "name": "normal_score",
+            "value": str(
+                widget_data.get(
+                    "normal_progression",
                     "---",
                 )
             ),

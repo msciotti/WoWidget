@@ -23,10 +23,10 @@ from wowidget.parsers.mythic_plus import (
     parse_mythic_score,
 )
 from wowidget.parsers.pvp import (
-    parse_highest_pvp_rating,
+    parse_pvp_ratings,
 )
 from wowidget.parsers.raids import (
-    parse_raid_progression,
+    parse_raid_progressions,
 )
 
 
@@ -73,6 +73,8 @@ def build_widget_data(
 
     race_name = parse_race(profile)
     class_name = parse_class(profile)
+    pvp_ratings = parse_pvp_ratings(pvp_brackets)
+    raid_progressions = parse_raid_progressions(raid_encounters)
 
     last_login_timestamp = profile.get("last_login_timestamp") or 0
 
@@ -90,8 +92,15 @@ def build_widget_data(
         "achievement_points": (parse_achievement_points(profile)),
         "item_level": parse_item_level(profile),
         "mythic_score": (parse_mythic_score(mythic_plus)),
-        "pvp_rating": (parse_highest_pvp_rating(pvp_brackets)),
-        "raid_progression": (parse_raid_progression(raid_encounters)),
+        "pvp_rating": pvp_ratings["highest"],
+        "solo_rating": pvp_ratings["shuffle"],
+        "two_rating": pvp_ratings["2v2"],
+        "three_rating": pvp_ratings["3v3"],
+        "blitz_rating": pvp_ratings["blitz"],
+        "rbg_rating": pvp_ratings["rbg"],
+        "raid_progression": raid_progressions["highest"],
+        "heroic_progression": raid_progressions["heroic"],
+        "normal_progression": raid_progressions["normal"],
         "total_mounts": (parse_total_mounts(mounts_collection)),
         "total_pets": (parse_total_pets(pets_collection)),
         "feats_of_strength": (parse_feats_of_strength(achievements_summary)),

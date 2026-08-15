@@ -1641,11 +1641,14 @@ class ApplicationController:
         self,
         layout_choices: dict,
     ) -> None:
-        oauth_status = self.discord_oauth_service.authorization_status(self.storage)
+        try:
+            bot_token_check = self.storage.load_discord_bot_token()
+        except RuntimeError:
+            bot_token_check = ""
 
-        if not oauth_status.get("authorized"):
+        if not bot_token_check:
             self.window.set_widget_designer_status(
-                "Discord authorization is required before applying the widget layout.",
+                "Discord bot token is missing. Complete setup first.",
                 is_error=True,
             )
             return
@@ -1686,16 +1689,16 @@ class ApplicationController:
     ) -> dict:
         import json
 
-        access_token = self.storage.load_discord_access_token()
+        bot_token = self.storage.load_discord_bot_token()
 
-        if not access_token:
+        if not bot_token:
             raise RuntimeError(
-                "Discord access token is missing. Re-authorize Discord in Settings."
+                "Discord bot token is missing. Complete setup first."
             )
 
         config_id = self.widget_config_service.upsert_and_publish(
             app_id=app_id,
-            access_token=access_token,
+            bot_token=bot_token,
             layout_choices=layout_choices,
             existing_config_id=existing_config_id,
         )

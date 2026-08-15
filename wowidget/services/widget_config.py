@@ -7,16 +7,16 @@ from wowidget.data.widget_slots import get_stat_type, get_subtitle_type
 class WidgetConfigService:
     """Creates, updates, and publishes Discord widget layout configurations.
 
-    Uses the OAuth Bearer token (not the bot token) since the widget-config
-    endpoints authenticate as the application team member, not as a bot.
+    Uses the Bot token — the widget-config endpoints authenticate via the
+    application's bot rather than an OAuth Bearer token.
     """
 
     BASE_URL = DISCORD_WIDGET_CONFIG_BASE
     USER_AGENT = DISCORD_USER_AGENT
 
-    def _headers(self, access_token: str) -> dict:
+    def _headers(self, bot_token: str) -> dict:
         return {
-            "Authorization": f"Bearer {access_token}",
+            "Authorization": f"Bot {bot_token}",
             "Content-Type": "application/json",
             "User-Agent": self.USER_AGENT,
         }
@@ -24,14 +24,14 @@ class WidgetConfigService:
     def get_existing_config_id(
         self,
         app_id: str,
-        access_token: str,
+        bot_token: str,
     ) -> str:
         """Return the ID of the first existing widget config, or empty string."""
         url = f"{self.BASE_URL}/applications/{app_id}/widget-configs"
         try:
             response = requests.get(
                 url,
-                headers=self._headers(access_token),
+                headers=self._headers(bot_token),
                 timeout=(10, 30),
             )
         except requests.RequestException as error:
@@ -42,13 +42,13 @@ class WidgetConfigService:
 
         configs = response.json()
         if isinstance(configs, list) and configs:
-            return str(configs[0].get("id", ""))
+            return str(configs[0].get("config_id", ""))
         return ""
 
     def create_config(
         self,
         app_id: str,
-        access_token: str,
+        bot_token: str,
         payload: dict,
     ) -> str:
         """POST a new widget config and return its ID."""
@@ -56,7 +56,7 @@ class WidgetConfigService:
         try:
             response = requests.post(
                 url,
-                headers=self._headers(access_token),
+                headers=self._headers(bot_token),
                 json=payload,
                 timeout=(10, 30),
             )
@@ -70,13 +70,13 @@ class WidgetConfigService:
                 f"Response: {response.text.strip() or 'No body.'}"
             )
 
-        return str(response.json().get("id", ""))
+        return str(response.json().get("config_id", ""))
 
     def update_config(
         self,
         app_id: str,
         config_id: str,
-        access_token: str,
+        bot_token: str,
         payload: dict,
     ) -> None:
         """PATCH an existing widget config."""
@@ -84,7 +84,7 @@ class WidgetConfigService:
         try:
             response = requests.patch(
                 url,
-                headers=self._headers(access_token),
+                headers=self._headers(bot_token),
                 json=payload,
                 timeout=(10, 30),
             )
@@ -102,7 +102,7 @@ class WidgetConfigService:
         self,
         app_id: str,
         config_id: str,
-        access_token: str,
+        bot_token: str,
     ) -> None:
         """Publish a widget config so it goes live on Discord profiles."""
         url = (
@@ -112,7 +112,7 @@ class WidgetConfigService:
         try:
             response = requests.post(
                 url,
-                headers=self._headers(access_token),
+                headers=self._headers(bot_token),
                 timeout=(10, 30),
             )
         except requests.RequestException as error:
@@ -128,43 +128,42 @@ class WidgetConfigService:
     def upsert_and_publish(
         self,
         app_id: str,
-        access_token: str,
+        bot_token: str,
         layout_choices: dict,
         existing_config_id: str = "",
     ) -> str:
         """Create or update the widget config from layout_choices, then publish.
 
-        Returns the config ID (useful for caching in settings so subsequent
-        saves use PATCH instead of POST).
+        Returns the config_id for caching so subsequent saves use PATCH.
         """
         payload = self._build_payload(layout_choices)
 
         config_id = existing_config_id or self.get_existing_config_id(
             app_id,
-            access_token,
+            bot_token,
         )
 
         if config_id:
-            self.update_config(app_id, config_id, access_token, payload)
+            self.update_config(app_id, config_id, bot_token, payload)
         else:
-            config_id = self.create_config(app_id, access_token, payload)
+            config_id = self.create_config(app_id, bot_token, payload)
 
-        self.publish_config(app_id, config_id, access_token)
+        self.publish_config(app_id, config_id, bot_token)
 
         return config_id
 
     def _build_payload(self, layout_choices: dict) -> dict:
-        """Convert the flat layout_choices dict into the Discord API payload."""
-        # ── Surface 1: WIDGET_TOP (hero_overview) ─────────────────────────
+        """Convert layout_choices into the Discord widget-config API payload."""
+        # ── widget_top ─────────────────────────────────────────────────────
         top_components: dict = {
             "hero_image": {
                 "fields": {
-                    "image": self._data_field(3, "character_model"),
+                    "image": self._data_field("image", "character_model"),
                 }
             },
             "title": {
                 "fields": {
-                    "text": self._data_field(1, "character_name"),
+                    "text": self._data_field("text", "character_name"),
                 }
             },
         }
@@ -183,15 +182,15 @@ class WidgetConfigService:
 
             label_text = choice.get("label", "")
             if label_text:
-                fields["label"] = self._custom_string_field(1, label_text)
+                fields["label"] = self._custom_string_field(label_text)
 
             icon_key = choice.get("icon", "")
             if icon_key:
-                fields["icon"] = self._data_field(3, icon_key)
+                fields["icon"] = self._data_field("image", icon_key)
 
             top_components[slot] = {"fields": fields}
 
-        # ── Surface 2: WIDGET_BOTTOM (stats_grid_3x2) ─────────────────────
+        # ── widget_bottom ──────────────────────────────────────────────────
         bottom_components: dict = {}
 
         for slot in ("stat_1", "stat_2", "stat_3", "stat_4", "stat_5", "stat_6"):
@@ -208,43 +207,73 @@ class WidgetConfigService:
 
             fields = {
                 "value": self._data_field(ptype, value_key),
-                "label": self._custom_string_field(1, label_text),
+                "label": self._custom_string_field(label_text),
             }
 
             icon_key = choice.get("icon", "")
             if icon_key:
-                fields["icon"] = self._data_field(3, icon_key)
+                fields["icon"] = self._data_field("image", icon_key)
 
             bottom_components[slot] = {"fields": fields}
+
+        # ── add_widget_preview (fixed) ─────────────────────────────────────
+        add_preview_components = {
+            "hero_image": {
+                "fields": {
+                    "image": self._data_field("image", "character_model"),
+                }
+            }
+        }
+
+        # ── mini_profile (fixed) ───────────────────────────────────────────
+        mini_profile_components = {
+            "stat": {
+                "fields": {
+                    "text": self._data_field("text", "character_name"),
+                    "icon": self._data_field("image", "spec_icon"),
+                }
+            },
+            "contained_image": {
+                "fields": {
+                    "image": self._data_field("image", "character_model"),
+                }
+            },
+        }
 
         return {
             "display_name": "WoWidget",
             "surfaces": {
-                "1": {
-                    "layout": "hero_overview",
+                "widget_top": {
+                    "layout": "widget_top_hero",
                     "components": top_components,
                 },
-                "2": {
-                    "layout": "stats_grid_3x2",
+                "widget_bottom": {
+                    "layout": "widget_bottom_stats",
                     "components": bottom_components,
+                },
+                "add_widget_preview": {
+                    "layout": "add_widget_preview_hero",
+                    "components": add_preview_components,
+                },
+                "mini_profile": {
+                    "layout": "mini_profile_contained_stat",
+                    "components": mini_profile_components,
                 },
             },
         }
 
     @staticmethod
-    def _data_field(presentation_type: int, value: str) -> dict:
+    def _data_field(presentation_type: str, value: str) -> dict:
         return {
-            "data": {
-                "presentation_type": presentation_type,
-                "value": value,
-            }
+            "value_type": "data",
+            "presentation_type": presentation_type,
+            "value": value,
         }
 
     @staticmethod
-    def _custom_string_field(presentation_type: int, value: str) -> dict:
+    def _custom_string_field(value: str) -> dict:
         return {
-            "custom_string": {
-                "presentation_type": presentation_type,
-                "value": value,
-            }
+            "value_type": "custom_string",
+            "presentation_type": "text",
+            "value": value,
         }

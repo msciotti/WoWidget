@@ -206,6 +206,30 @@ QComboBox:focus {
 QComboBox::drop-down {
     width: 26px;
     border: none;
+    background: transparent;
+}
+
+QComboBox QLineEdit {
+    background: transparent;
+    border: none;
+    min-height: 0;
+    padding: 0 2px;
+    color: #FFFFFF;
+}
+
+QComboBox QAbstractItemView {
+    color: #F5F2FF;
+    background-color: #1A1530;
+    border: 1px solid rgba(191, 164, 232, 100);
+    border-radius: 8px;
+    selection-background-color: #7250B9;
+    selection-color: #FFFFFF;
+    outline: none;
+}
+
+QComboBox QAbstractItemView::item {
+    min-height: 28px;
+    padding: 0 10px;
 }
 
 QCheckBox {

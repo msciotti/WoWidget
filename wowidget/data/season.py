@@ -1,8 +1,6 @@
 CURRENT_SEASON = {
     "raids": {
-        "The Dreamrift": 1,
-        "The Voidspire": 6,
-        "March on Quel'Danas": 2,
-        "Sporefall": 1,
+        "The Venomous Abyss": 8,
+        "The Tidebound Grotto": 1,
     },
 }

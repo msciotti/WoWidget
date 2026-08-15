@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 — Midnight Season 2
+
+### Changed
+
+- Updated raid progression to track Midnight Season 2 content:
+  - The Venomous Abyss (8 bosses)
+  - The Tidebound Grotto (1 boss)
+
 ## 1.1.0 — UI Refresh, PvP Expansion, and Raid Progression
 
 ### Added

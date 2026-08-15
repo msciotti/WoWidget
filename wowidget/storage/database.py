@@ -100,6 +100,20 @@ class SettingsDatabase:
                 column_definition=("TEXT NOT NULL DEFAULT ''"),
             )
 
+            self._ensure_column(
+                connection,
+                table_name="widget_settings",
+                column_name="widget_config_id",
+                column_definition=("TEXT NOT NULL DEFAULT ''"),
+            )
+
+            self._ensure_column(
+                connection,
+                table_name="widget_settings",
+                column_name="widget_layout_json",
+                column_definition=("TEXT NOT NULL DEFAULT ''"),
+            )
+
             connection.execute("""
                 CREATE TABLE IF NOT EXISTS portrait_compositions (
                     character_id INTEGER PRIMARY KEY,
@@ -171,6 +185,8 @@ class SettingsDatabase:
             last_push_at=(row["last_push_at"]),
             last_error=(row["last_error"]),
             character_image_url=(row["character_image_url"]),
+            widget_config_id=(row["widget_config_id"]),
+            widget_layout_json=(row["widget_layout_json"]),
         )
 
     def save_settings(
@@ -203,7 +219,10 @@ class SettingsDatabase:
                     last_push_at = ?,
                     last_error = ?,
 
-                    character_image_url = ?
+                    character_image_url = ?,
+
+                    widget_config_id = ?,
+                    widget_layout_json = ?
                 WHERE id = 1
                 """,
                 (
@@ -223,6 +242,8 @@ class SettingsDatabase:
                     settings.last_push_at,
                     settings.last_error,
                     settings.character_image_url,
+                    settings.widget_config_id,
+                    settings.widget_layout_json,
                 ),
             )
 

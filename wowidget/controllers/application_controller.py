@@ -26,6 +26,7 @@ from wowidget.services.discord import DiscordService
 from wowidget.services.discord_oauth import (
     DiscordOAuthService,
 )
+from wowidget.services.widget_config import WidgetConfigService
 from wowidget.services.image_uploader import ImageUploader
 from wowidget.services.render_processor import RenderProcessor
 from wowidget.services.startup_manager import StartupManager
@@ -75,6 +76,7 @@ class ApplicationController:
         self.blizzard_service = BlizzardService()
         self.discord_service = DiscordService()
         self.discord_oauth_service = DiscordOAuthService()
+        self.widget_config_service = WidgetConfigService()
         self.render_processor = RenderProcessor()
 
         self.image_uploader = ImageUploader(WORKER_BASE_URL)
@@ -145,6 +147,16 @@ class ApplicationController:
         self.window.discord_refresh_requested.connect(self.handle_discord_refresh)
         self.window.check_updates_requested.connect(self.handle_manual_update_check)
         self.window.reset_requested.connect(self.handle_reset_application)
+
+        self.window.widget_designer_open_requested.connect(
+            self.handle_open_widget_designer
+        )
+        self.window.widget_designer_apply_requested.connect(
+            self.handle_widget_designer_apply
+        )
+        self.window.widget_designer_back_requested.connect(
+            self.handle_widget_designer_back
+        )
 
         self._build_tray()
 
@@ -1612,6 +1624,116 @@ class ApplicationController:
 
         self.refresh_window()
         self.show_correct_page()
+
+    def handle_open_widget_designer(
+        self,
+    ) -> None:
+        self.window.show_widget_designer_page(
+            layout_json=self.settings.widget_layout_json,
+        )
+
+    def handle_widget_designer_back(
+        self,
+    ) -> None:
+        self.window.show_status_page()
+
+    def handle_widget_designer_apply(
+        self,
+        layout_choices: dict,
+    ) -> None:
+        oauth_status = self.discord_oauth_service.authorization_status(self.storage)
+
+        if not oauth_status.get("authorized"):
+            self.window.set_widget_designer_status(
+                "Discord authorization is required before applying the widget layout.",
+                is_error=True,
+            )
+            return
+
+        app_id = self.settings.discord_application_id
+
+        if not app_id:
+            self.window.set_widget_designer_status(
+                "Discord Application ID is missing. Complete setup first.",
+                is_error=True,
+            )
+            return
+
+        self.window.set_widget_designer_busy(True)
+        self.window.set_widget_designer_status("Applying widget layout to Discord...")
+
+        existing_config_id = self.settings.widget_config_id
+
+        worker = TaskWorker(
+            self._perform_widget_designer_apply,
+            app_id,
+            layout_choices,
+            existing_config_id,
+        )
+
+        self._start_worker(
+            worker,
+            succeeded=self._handle_widget_designer_apply_result,
+            failed=self._handle_widget_designer_apply_error,
+            finished=self._finish_widget_designer_apply,
+        )
+
+    def _perform_widget_designer_apply(
+        self,
+        app_id: str,
+        layout_choices: dict,
+        existing_config_id: str,
+    ) -> dict:
+        import json
+
+        access_token = self.storage.load_discord_access_token()
+
+        if not access_token:
+            raise RuntimeError(
+                "Discord access token is missing. Re-authorize Discord in Settings."
+            )
+
+        config_id = self.widget_config_service.upsert_and_publish(
+            app_id=app_id,
+            access_token=access_token,
+            layout_choices=layout_choices,
+            existing_config_id=existing_config_id,
+        )
+
+        return {
+            "config_id": config_id,
+            "layout_json": json.dumps(layout_choices),
+        }
+
+    def _handle_widget_designer_apply_result(
+        self,
+        result: dict,
+    ) -> None:
+        self.settings.widget_config_id = result.get("config_id", "")
+        self.settings.widget_layout_json = result.get("layout_json", "")
+
+        try:
+            self.storage.save_settings(self.settings)
+        except Exception:
+            pass
+
+        self.window.set_widget_designer_status(
+            "Widget layout applied and published to Discord."
+        )
+
+    def _handle_widget_designer_apply_error(
+        self,
+        message: str,
+    ) -> None:
+        self.window.set_widget_designer_status(
+            f"Failed to apply widget layout: {message}",
+            is_error=True,
+        )
+
+    def _finish_widget_designer_apply(
+        self,
+    ) -> None:
+        self.window.set_widget_designer_busy(False)
 
     @staticmethod
     def _open_folder(

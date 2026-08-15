@@ -30,6 +30,9 @@ class WidgetSettings:
 
     character_image_url: str = ""
 
+    widget_config_id: str = ""
+    widget_layout_json: str = ""
+
 
 @dataclass
 class PortraitComposition:

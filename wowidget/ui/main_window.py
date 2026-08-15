@@ -28,6 +28,7 @@ from wowidget.ui.app_icon_generator_dialog import AppIconGeneratorDialog
 from wowidget.ui.character_page import CharacterPage
 from wowidget.ui.settings_page import SettingsPage
 from wowidget.ui.setup_page import SetupPage
+from wowidget.ui.widget_designer_page import WidgetDesignerPage
 from wowidget.ui.theme import (
     APP_STYLESHEET,
     BACKGROUND_IMAGE_PATH,
@@ -79,6 +80,10 @@ class MainWindow(QMainWindow):
     check_updates_requested = Signal()
     reset_requested = Signal()
 
+    widget_designer_open_requested = Signal()
+    widget_designer_apply_requested = Signal(dict)
+    widget_designer_back_requested = Signal()
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -103,6 +108,7 @@ class MainWindow(QMainWindow):
         self.setup_page = SetupPage()
         self.character_page = CharacterPage()
         self.settings_page = SettingsPage()
+        self.widget_designer_page = WidgetDesignerPage()
 
         self.setup_page.save_requested.connect(self.setup_save_requested.emit)
         self.setup_page.authorize_requested.connect(
@@ -135,10 +141,18 @@ class MainWindow(QMainWindow):
         )
         self.settings_page.reset_requested.connect(self.reset_requested.emit)
 
+        self.widget_designer_page.apply_requested.connect(
+            self.widget_designer_apply_requested.emit
+        )
+        self.widget_designer_page.back_requested.connect(
+            self.widget_designer_back_requested.emit
+        )
+
         self.pages.addWidget(self.status_page)
         self.pages.addWidget(self.setup_page)
         self.pages.addWidget(self.character_page)
         self.pages.addWidget(self.settings_page)
+        self.pages.addWidget(self.widget_designer_page)
 
         self.setCentralWidget(self.pages)
 
@@ -438,6 +452,11 @@ class MainWindow(QMainWindow):
             self.change_character_requested.emit
         )
 
+        self.widget_designer_button = QPushButton("Widget Designer")
+        self.widget_designer_button.clicked.connect(
+            self.widget_designer_open_requested.emit
+        )
+
         self.icon_generator_button = QPushButton("Icon Generator")
         self.icon_generator_button.clicked.connect(self._open_app_icon_generator)
 
@@ -447,6 +466,7 @@ class MainWindow(QMainWindow):
         action_layout.addWidget(self.update_widget_button)
         action_layout.addWidget(self.toggle_updates_button)
         action_layout.addWidget(self.change_character_button)
+        action_layout.addWidget(self.widget_designer_button)
         action_layout.addWidget(self.icon_generator_button)
         action_layout.addWidget(self.settings_button)
 
@@ -703,6 +723,29 @@ class MainWindow(QMainWindow):
         )
 
         self.pages.setCurrentWidget(self.settings_page)
+
+    def show_widget_designer_page(
+        self,
+        *,
+        layout_json: str = "",
+    ) -> None:
+        self.widget_designer_page.load_from_json(layout_json)
+        self.widget_designer_page.set_status("")
+        self.pages.setCurrentWidget(self.widget_designer_page)
+
+    def set_widget_designer_busy(
+        self,
+        busy: bool,
+    ) -> None:
+        self.widget_designer_page.set_apply_busy(busy)
+
+    def set_widget_designer_status(
+        self,
+        message: str,
+        *,
+        is_error: bool = False,
+    ) -> None:
+        self.widget_designer_page.set_status(message, is_error=is_error)
 
     def display_state(
         self,

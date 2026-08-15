@@ -1720,9 +1720,46 @@ class ApplicationController:
         except Exception:
             pass
 
+        # Layout config is set — now push current character values so Discord
+        # has data to display in the newly configured slots.
+        if self._character_is_selected() and not self.widget_update_in_progress:
+            self.window.set_widget_designer_status(
+                "Layout applied. Pushing character data to Discord..."
+            )
+            self.widget_update_in_progress = True
+            worker = TaskWorker(
+                self.widget_update_service.update_widget,
+                self.settings,
+                force_push=True,
+            )
+            self._start_worker(
+                worker,
+                succeeded=self._handle_designer_value_push_result,
+                failed=self._handle_designer_value_push_error,
+                finished=self._finish_designer_value_push,
+            )
+        else:
+            self.window.set_widget_designer_status(
+                "Layout applied to Discord. Select a character and update to populate data."
+            )
+
+    def _handle_designer_value_push_result(self, result: dict) -> None:
+        self.settings = self.storage.load_settings()
+        self.latest_widget_data = dict(result.get("widget_data", {}))
+        self.refresh_window()
         self.window.set_widget_designer_status(
-            "Widget layout applied and published to Discord."
+            "Layout applied and character data pushed to Discord."
         )
+
+    def _handle_designer_value_push_error(self, message: str) -> None:
+        self.window.set_widget_designer_status(
+            f"Layout applied, but data push failed: {message}",
+            is_error=True,
+        )
+
+    def _finish_designer_value_push(self) -> None:
+        self.widget_update_in_progress = False
+        self.window.set_widget_designer_busy(False)
 
     def _handle_widget_designer_apply_error(
         self,
@@ -1736,7 +1773,10 @@ class ApplicationController:
     def _finish_widget_designer_apply(
         self,
     ) -> None:
-        self.window.set_widget_designer_busy(False)
+        # Only re-enable UI here if we did NOT kick off a value push
+        # (value push has its own _finish_designer_value_push that handles it).
+        if not self.widget_update_in_progress:
+            self.window.set_widget_designer_busy(False)
 
     @staticmethod
     def _open_folder(

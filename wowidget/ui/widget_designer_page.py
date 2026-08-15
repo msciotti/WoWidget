@@ -7,7 +7,6 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QPushButton,
     QScrollArea,
     QSizePolicy,
@@ -180,6 +179,27 @@ class WidgetPreviewWidget(QFrame):
 # Slot selector rows
 # ──────────────────────────────────────────────────────────────────────────────
 
+_SUBTITLE_LABELS: list[str] = sorted(
+    {opt["suggested_label"] for opt in SUBTITLE_OPTIONS if opt["suggested_label"]}
+)
+_STAT_LABELS: list[str] = sorted(
+    {opt["suggested_label"] for opt in STAT_OPTIONS if opt["suggested_label"]}
+)
+
+
+def _make_label_combo(labels: list[str]) -> QComboBox:
+    """Return an editable combo pre-loaded with suggested labels."""
+    combo = QComboBox()
+    combo.setEditable(True)
+    combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+    combo.addItem("")
+    for lbl in labels:
+        combo.addItem(lbl)
+    combo.setMinimumWidth(110)
+    combo.setMaximumWidth(140)
+    return combo
+
+
 class _SubtitleSlotRow(QWidget):
     changed = Signal()
 
@@ -205,18 +225,15 @@ class _SubtitleSlotRow(QWidget):
         layout.addWidget(self.icon_combo)
 
         layout.addWidget(QLabel("Label"))
-        self.label_edit = QLineEdit()
-        self.label_edit.setPlaceholderText("optional")
-        self.label_edit.setMaximumWidth(110)
-        layout.addWidget(self.label_edit)
+        self.label_combo = _make_label_combo(_SUBTITLE_LABELS)
+        layout.addWidget(self.label_combo)
 
         self.combo.currentIndexChanged.connect(self._on_text_changed)
         self.icon_combo.currentIndexChanged.connect(self.changed.emit)
-        self.label_edit.textChanged.connect(self.changed.emit)
+        self.label_combo.currentTextChanged.connect(self.changed.emit)
 
     def _on_text_changed(self) -> None:
         key = self.combo.currentData()
-        # Auto-fill icon if the option has a suggested icon
         for opt in SUBTITLE_OPTIONS:
             if opt["key"] == key:
                 icon_key = opt.get("icon") or ""
@@ -224,7 +241,9 @@ class _SubtitleSlotRow(QWidget):
                 if idx >= 0:
                     self.icon_combo.setCurrentIndex(idx)
                 suggested = opt.get("suggested_label", "")
-                self.label_edit.setText(suggested)
+                self.label_combo.blockSignals(True)
+                self.label_combo.setCurrentText(suggested)
+                self.label_combo.blockSignals(False)
                 break
         self.changed.emit()
 
@@ -232,7 +251,7 @@ class _SubtitleSlotRow(QWidget):
         return {
             "text": self.combo.currentData() or "",
             "icon": self.icon_combo.currentData() or "",
-            "label": self.label_edit.text().strip(),
+            "label": self.label_combo.currentText().strip(),
         }
 
     def set_choice(self, choice: dict) -> None:
@@ -248,9 +267,9 @@ class _SubtitleSlotRow(QWidget):
             self.icon_combo.setCurrentIndex(idx)
             self.icon_combo.blockSignals(False)
 
-        self.label_edit.blockSignals(True)
-        self.label_edit.setText(choice.get("label", ""))
-        self.label_edit.blockSignals(False)
+        self.label_combo.blockSignals(True)
+        self.label_combo.setCurrentText(choice.get("label", ""))
+        self.label_combo.blockSignals(False)
 
 
 class _StatSlotRow(QWidget):
@@ -283,16 +302,14 @@ class _StatSlotRow(QWidget):
         layout.addWidget(self.icon_combo)
 
         layout.addWidget(QLabel("Label"))
-        self.label_edit = QLineEdit()
-        self.label_edit.setPlaceholderText("required")
-        self.label_edit.setMaximumWidth(110)
+        self.label_combo = _make_label_combo(_STAT_LABELS)
         if locked:
-            self.label_edit.setEnabled(False)
-        layout.addWidget(self.label_edit)
+            self.label_combo.setEnabled(False)
+        layout.addWidget(self.label_combo)
 
         self.combo.currentIndexChanged.connect(self._on_value_changed)
         self.icon_combo.currentIndexChanged.connect(self.changed.emit)
-        self.label_edit.textChanged.connect(self.changed.emit)
+        self.label_combo.currentTextChanged.connect(self.changed.emit)
 
     def _on_value_changed(self) -> None:
         key = self.combo.currentData()
@@ -302,13 +319,15 @@ class _StatSlotRow(QWidget):
                 idx = self.icon_combo.findData(icon_key)
                 if idx >= 0:
                     self.icon_combo.setCurrentIndex(idx)
-                self.label_edit.setText(opt.get("suggested_label", ""))
+                self.label_combo.blockSignals(True)
+                self.label_combo.setCurrentText(opt.get("suggested_label", ""))
+                self.label_combo.blockSignals(False)
                 break
         self.changed.emit()
 
     def get_choice(self) -> dict:
         key = self.combo.currentData() or ""
-        ptype = 1
+        ptype = "text"
         for opt in STAT_OPTIONS:
             if opt["key"] == key:
                 ptype = opt["type"]
@@ -316,7 +335,7 @@ class _StatSlotRow(QWidget):
         return {
             "value": key,
             "icon": self.icon_combo.currentData() or "",
-            "label": self.label_edit.text().strip(),
+            "label": self.label_combo.currentText().strip(),
             "type": ptype,
         }
 
@@ -333,9 +352,9 @@ class _StatSlotRow(QWidget):
             self.icon_combo.setCurrentIndex(idx)
             self.icon_combo.blockSignals(False)
 
-        self.label_edit.blockSignals(True)
-        self.label_edit.setText(choice.get("label", ""))
-        self.label_edit.blockSignals(False)
+        self.label_combo.blockSignals(True)
+        self.label_combo.setCurrentText(choice.get("label", ""))
+        self.label_combo.blockSignals(False)
 
 
 # ──────────────────────────────────────────────────────────────────────────────

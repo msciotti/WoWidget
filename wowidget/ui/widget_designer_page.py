@@ -205,28 +205,42 @@ class _SubtitleSlotRow(QWidget):
 
     def __init__(self, slot_number: int) -> None:
         super().__init__()
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(4)
 
-        layout.addWidget(QLabel(f"Subtitle {slot_number}"))
+        # Row 1: slot label + variable combo
+        top = QHBoxLayout()
+        top.setContentsMargins(0, 0, 0, 0)
+        top.setSpacing(8)
+
+        slot_label = QLabel(f"Subtitle {slot_number}")
+        slot_label.setFixedWidth(70)
+        top.addWidget(slot_label)
 
         self.combo = QComboBox()
-        self.combo.setMinimumWidth(160)
         for opt in SUBTITLE_OPTIONS:
             self.combo.addItem(opt["label"], opt["key"])
-        layout.addWidget(self.combo, stretch=1)
+        top.addWidget(self.combo, stretch=1)
+        outer.addLayout(top)
 
-        layout.addWidget(QLabel("Icon"))
+        # Row 2: icon + label (indented to align with combo)
+        bottom = QHBoxLayout()
+        bottom.setContentsMargins(78, 0, 0, 0)
+        bottom.setSpacing(8)
+
+        bottom.addWidget(QLabel("Icon:"))
         self.icon_combo = QComboBox()
-        self.icon_combo.setMinimumWidth(130)
         for opt in ICON_OPTIONS:
             self.icon_combo.addItem(opt["label"], opt["key"])
-        layout.addWidget(self.icon_combo)
+        bottom.addWidget(self.icon_combo, stretch=1)
 
-        layout.addWidget(QLabel("Label"))
+        bottom.addWidget(QLabel("Label:"))
         self.label_combo = _make_label_combo(_SUBTITLE_LABELS)
-        layout.addWidget(self.label_combo)
+        self.label_combo.setMinimumWidth(0)
+        self.label_combo.setMaximumWidth(16777215)
+        bottom.addWidget(self.label_combo, stretch=1)
+        outer.addLayout(bottom)
 
         self.combo.currentIndexChanged.connect(self._on_text_changed)
         self.icon_combo.currentIndexChanged.connect(self.changed.emit)
@@ -278,34 +292,48 @@ class _StatSlotRow(QWidget):
     def __init__(self, slot_number: int, locked: bool = False) -> None:
         super().__init__()
         self._locked = locked
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(4)
 
-        layout.addWidget(QLabel(f"Stat {slot_number}"))
+        # Row 1: slot label + variable combo
+        top = QHBoxLayout()
+        top.setContentsMargins(0, 0, 0, 0)
+        top.setSpacing(8)
+
+        slot_label = QLabel(f"Stat {slot_number}")
+        slot_label.setFixedWidth(40)
+        top.addWidget(slot_label)
 
         self.combo = QComboBox()
-        self.combo.setMinimumWidth(180)
         for opt in STAT_OPTIONS:
             self.combo.addItem(opt["label"], opt["key"])
         if locked:
             self.combo.setEnabled(False)
-        layout.addWidget(self.combo, stretch=1)
+        top.addWidget(self.combo, stretch=1)
+        outer.addLayout(top)
 
-        layout.addWidget(QLabel("Icon"))
+        # Row 2: icon + label (indented to align with combo)
+        bottom = QHBoxLayout()
+        bottom.setContentsMargins(48, 0, 0, 0)
+        bottom.setSpacing(8)
+
+        bottom.addWidget(QLabel("Icon:"))
         self.icon_combo = QComboBox()
-        self.icon_combo.setMinimumWidth(130)
         for opt in ICON_OPTIONS:
             self.icon_combo.addItem(opt["label"], opt["key"])
         if locked:
             self.icon_combo.setEnabled(False)
-        layout.addWidget(self.icon_combo)
+        bottom.addWidget(self.icon_combo, stretch=1)
 
-        layout.addWidget(QLabel("Label"))
+        bottom.addWidget(QLabel("Label:"))
         self.label_combo = _make_label_combo(_STAT_LABELS)
+        self.label_combo.setMinimumWidth(0)
+        self.label_combo.setMaximumWidth(16777215)
         if locked:
             self.label_combo.setEnabled(False)
-        layout.addWidget(self.label_combo)
+        bottom.addWidget(self.label_combo, stretch=1)
+        outer.addLayout(bottom)
 
         self.combo.currentIndexChanged.connect(self._on_value_changed)
         self.icon_combo.currentIndexChanged.connect(self.changed.emit)
@@ -445,7 +473,7 @@ class WidgetDesignerPage(QWidget):
         # Widget Top group
         top_group = QGroupBox("Widget Top")
         top_group_layout = QVBoxLayout(top_group)
-        top_group_layout.setSpacing(10)
+        top_group_layout.setSpacing(14)
 
         # Fixed / locked slots
         for locked_text in (
@@ -467,7 +495,7 @@ class WidgetDesignerPage(QWidget):
         # Widget Bottom group
         bottom_group = QGroupBox("Widget Bottom — Stats Grid")
         bottom_group_layout = QVBoxLayout(bottom_group)
-        bottom_group_layout.setSpacing(10)
+        bottom_group_layout.setSpacing(14)
 
         self.stat_rows: list[_StatSlotRow] = []
         for i in range(1, 7):
